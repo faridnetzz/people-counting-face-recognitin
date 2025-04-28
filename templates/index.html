@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="refresh" content="1">
+    <meta charset="UTF-8">
+    <title>People Counter Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+    <style>
+        img.thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-4">
+        <div class="d-flex align-items-center mb-4">
+            <img src="{{ url_for('static', filename='osslogo.png') }}" alt="OSS Logo" style="height: 60px; margin-right: 15px;">
+        </div>
+        <h2 class="mb-4">OSS People Counting Dashboard</h2>
+    
+        
+        <div class="row text-center mb-4">
+            <div class="col"><div class="card shadow-sm p-3"><strong>Total:</strong> {{ total }}</div></div>
+            <div class="col"><div class="card shadow-sm p-3"><strong>Laki-laki:</strong> {{ male }}</div></div>
+            <div class="col"><div class="card shadow-sm p-3"><strong>Perempuan:</strong> {{ female }}</div></div>
+        </div>
+
+        <!-- Filter + Export -->
+        <form method="get" class="row g-2 mb-4">
+            <div class="col-md-3">
+                <select class="form-select" name="gender">
+                    <option value="">Semua Gender</option>
+                    <option value="Male" {% if request.args.get('gender') == 'Male' %}selected{% endif %}>Laki-laki</option>
+                    <option value="Female" {% if request.args.get('gender') == 'Female' %}selected{% endif %}>Perempuan</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <input type="date" class="form-control" name="date" value="{{ request.args.get('date', '') }}">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">Filter</button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">Reset</a>
+            </div>
+          <!----  <div class="col-md-3 text-end">
+                
+                <a href="{{ url_for('export_csv', gender=request.args.get('gender'), date=request.args.get('date')) }}" class="btn btn-success me-2">Export CSV</a>
+                <a href="{{ url_for('export_excel', gender=request.args.get('gender'), date=request.args.get('date')) }}" class="btn btn-warning">Export Excel</a>
+                <a href="{{ url_for('stats') }}"><button class="btn btn-danger">Lihat Statistik</button></a>
+            </div> !--->
+        </form>
+
+        <div class="d-flex gap-2 justify-content-end mb-3">
+
+    
+    <a href="{{ url_for('stats') }}" class="btn btn-danger">Lihat Statistik</a>
+    <a href="{{ url_for('export_csv') }}" class="btn btn-success">Export CSV</a>
+    <a href="{{ url_for('export_excel') }}" class="btn btn-warning">Export Excel</a>
+</div>
+
+
+        <!-- Data Table -->
+        <table id="peopleTable" class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Time</th>
+                    <th>Gender</th>
+                    <th>Face</th>
+                    <th>Coordinates (X,Y,W,H)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in data %}
+                <tr>
+                    <td>{{ row[1] }}</td>
+                    <td>{{ row[2] }}</td>
+                    <td>
+                        {% if row[7] %}
+                            <img src="{{ url_for('static', filename='face_snapshots/' + row[7].split('/')[-1]) }}" class="thumb mb-1 d-block">
+                            <a href="{{ url_for('download_image', filename=row[7].split('/')[-1]) }}" class="btn btn-sm btn-outline-primary">Download</a>
+                        {% endif %}
+                    </td>
+                    <td>{{ row[3] }}, {{ row[4] }}, {{ row[5] }}, {{ row[6] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Recent Snapshots</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+          {% for img in recent_images %}
+            <div style="flex: 0 0 auto;">
+              <img src="{{ url_for('static', filename='face_snapshots/' ~ img) }}" 
+                   alt="snapshot" width="150" height="150" style="object-fit: cover; border-radius: 8px;"/>
+            </div>
+          {% endfor %}
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            $('#peopleTable').DataTable({
+                "pageLength": 20
+            });
+        });
+    </script>
+</body>
+</html>
